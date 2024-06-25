@@ -20,7 +20,7 @@ class PostFactory extends Factory
      */
     public function definition(): array
     {
-        $name = $this->faker->unique()->word(20);
+        $name = $this->faker->sentence();
         return [
             'name' => $name,
             'slug' => Str::slug($name),
