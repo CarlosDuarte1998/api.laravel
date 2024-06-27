@@ -54,7 +54,8 @@ class Category extends Model
         return $query;
     }
 
-    public function scopeSort(Builder $query){
+    public function scopeSort(Builder $query)
+    {
         if (empty($this->allowSort) || empty(request('sort'))) {
             return $query;
         }
@@ -70,8 +71,16 @@ class Category extends Model
             }
             if ($allowSort->contains($sortField)) {
                 $query->orderBy($sortField, $direction);
-              
             }
         }
+    }
+
+    public function scopeGetOrPaginate(Builder $query)
+    {
+        $perPage = intval(request('perPage', 0));
+        if ($perPage > 0) {
+            return $query->paginate($perPage);
+        }
+        return $query->get();
     }
 }
