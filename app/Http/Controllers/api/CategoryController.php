@@ -14,6 +14,7 @@ class CategoryController extends Controller
     public function index()
     {
         $categories = Category::included()
+        ->sort()
         ->filter()
         ->get();
         return $categories;

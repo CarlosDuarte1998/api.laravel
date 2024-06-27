@@ -12,7 +12,8 @@ class Category extends Model
     use HasFactory;
     protected $fillable = ['name', 'slug'];
     protected $allowIncludes = ['posts', 'posts.user'];
-    protected $allowFilter = ['id','name', 'slug'];
+    protected $allowFilter = ['id', 'name', 'slug'];
+    protected $allowSort = ['id', 'name', 'slug'];
 
     //Relación uno a muchos
     public function posts()
@@ -22,10 +23,10 @@ class Category extends Model
 
     public function scopeIncluded(Builder $query)
     {
-        if (empty($this->allowIncludes)||empty(request('included'))) {
+        if (empty($this->allowIncludes) || empty(request('included'))) {
             return;
         }
-        $relations= explode( ',', request('included'));
+        $relations = explode(',', request('included'));
         $allowIncludes = collect($this->allowIncludes);
         foreach ($relations as $key => $relation) {
             if (!$allowIncludes->contains($relation)) {
@@ -35,23 +36,42 @@ class Category extends Model
         $query->with($relations);
     }
 
-   public function scopeFilter(Builder $query)
-{
-    if (empty($this->allowFilter) || empty(request('filter'))) {
+    public function scopeFilter(Builder $query)
+    {
+        if (empty($this->allowFilter) || empty(request('filter'))) {
+            return $query;
+        }
+
+        $filters = request('filter');
+        $allowFilter = collect($this->allowFilter)->filter(function ($field) use ($filters) {
+            return array_key_exists($field, $filters);
+        });
+
+        $allowFilter->each(function ($field) use ($filters, $query) {
+            $query->where($field, 'LIKE', '%' . $filters[$field] . '%');
+        });
+
         return $query;
     }
 
-    $filters = request('filter');
-    $allowFilter = collect($this->allowFilter)->filter(function ($field) use ($filters) {
-        return array_key_exists($field, $filters);
-    });
+    public function scopeSort(Builder $query){
+        if (empty($this->allowSort) || empty(request('sort'))) {
+            return $query;
+        }
 
-    $allowFilter->each(function ($field) use ($filters, $query) {
-        $query->where($field, 'LIKE', '%' . $filters[$field] . '%');
-    });
+        $sortFields = explode(',', request('sort'));
+        $allowSort = collect($this->allowSort);
 
-    return $query;
-}
-    
-    
+        foreach ($sortFields as $sortField) {
+            $direction = 'asc';
+            if (substr($sortField, 0, 1) == '-') {
+                $direction = 'desc';
+                $sortField = substr($sortField, 1);
+            }
+            if ($allowSort->contains($sortField)) {
+                $query->orderBy($sortField, $direction);
+              
+            }
+        }
+    }
 }
