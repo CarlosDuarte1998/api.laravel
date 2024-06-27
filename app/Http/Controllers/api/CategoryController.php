@@ -5,6 +5,7 @@ namespace App\Http\Controllers\api;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use App\Http\Resources\CategoryResource;
 
 class CategoryController extends Controller
 {
@@ -17,7 +18,7 @@ class CategoryController extends Controller
         ->sort()
         ->filter()
         ->getOrPaginate();
-        return $categories;
+        return CategoryResource::collection($categories);
     }
 
     /**
@@ -42,7 +43,7 @@ class CategoryController extends Controller
     public function show($id)
     {
         $category = Category::included()->findOrFail($id);
-        return $category;
+        return CategoryResource::make($category);
     }
     
 
