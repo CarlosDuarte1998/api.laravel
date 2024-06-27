@@ -11,7 +11,8 @@ class Category extends Model
 {
     use HasFactory;
     protected $fillable = ['name', 'slug'];
-    protected $allowedIncludes = ['posts', 'posts.user'];
+    protected $allowIncludes = ['posts', 'posts.user'];
+    protected $allowFilter = ['id','name', 'slug'];
 
     //Relación uno a muchos
     public function posts()
@@ -21,17 +22,36 @@ class Category extends Model
 
     public function scopeIncluded(Builder $query)
     {
-        if (empty($this->allowedIncludes)||empty(request('included'))) {
+        if (empty($this->allowIncludes)||empty(request('included'))) {
             return;
         }
         $relations= explode( ',', request('included'));
-        $allowedIncludes = collect($this->allowedIncludes);
+        $allowIncludes = collect($this->allowIncludes);
         foreach ($relations as $key => $relation) {
-            if (!$allowedIncludes->contains($relation)) {
+            if (!$allowIncludes->contains($relation)) {
                 unset($relations[$key]);
             }
         }
         $query->with($relations);
     }
+
+   public function scopeFilter(Builder $query)
+{
+    if (empty($this->allowFilter) || empty(request('filter'))) {
+        return $query;
+    }
+
+    $filters = request('filter');
+    $allowFilter = collect($this->allowFilter)->filter(function ($field) use ($filters) {
+        return array_key_exists($field, $filters);
+    });
+
+    $allowFilter->each(function ($field) use ($filters, $query) {
+        $query->where($field, 'LIKE', '%' . $filters[$field] . '%');
+    });
+
+    return $query;
+}
+    
     
 }
