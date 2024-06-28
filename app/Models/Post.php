@@ -11,6 +11,15 @@ class Post extends Model
     use HasFactory, ApiTrait;
     const BORRADOR = 1;
     const PUBLICADO = 2;
+    protected $fillable = [
+        'name',
+        'slug',
+        'extract',
+        'body',
+        'status',
+        'category_id',
+        'user_id'
+    ];
 
     //Relación uno a muchos inversa
     public function user()
